@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Chat</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+        <link rel="stylesheet" href="styles.css"/>
+    </head>
+    <body>
+        <form id="chat">
+            <input type="text" placeholder="Digite seu usuário" name="username" id="" value="" />
+            <div class="messages"></div>
+            <input type="text" placeholder="Digite sua mensagem" name="message" id="" value="" />
+            <button type="submit">Enviar</button>
+        </form>
+        <script type="text/javascript" charset="utf-8">
+            const socket = io("http://localhost:3000");
+            
+            function renderMessage(message) {
+                const messageHtml = `
+                    <div class="message">
+                        <strong>${message.author}:</strong> ${message.message}
+                    </div>
+                `;
+                $(".messages").append(messageHtml);
+            }
+            
+            socket.on("receivedMessage", (message) => {
+                renderMessage(message);
+            });
+            
+            socket.on("previousMessages", (messages) => {
+                for(const message of messages) {
+                    renderMessage(message);
+                }
+            });
+            
+            $("#chat").submit((event) => {
+                event.preventDefault();
+                const author = $("input[name=username]").val();
+                const message = $("input[name=message]").val();
+                
+                if(author.length && message.length) {
+                    const messageObject = {
+                        author,
+                        message
+                    }
+                    
+                    renderMessage(messageObject);
+                    
+                    socket.emit("sendMessage", messageObject);
+                }
+            });
+        </script>
+    </body>
+</html>
